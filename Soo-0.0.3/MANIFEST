@@ -4,6 +4,7 @@ MANIFEST
 META.yml
 Makefile.PL
 README
+another.pl
 dist.ini
 lib/Soo.pm
 t/lib/Pet.pm
@@ -13,4 +14,5 @@ t/lib/Pet/Parrot.pm
 t/pet-cat.t
 t/pet-dog.t
 t/pet-parrot.t
+t/pet-same-file.t
 t/pet.t

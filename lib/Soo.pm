@@ -5,11 +5,13 @@ package Soo;
 
 use Carp 'croak';
 
-our $VERSION = '0.0.2';
+our $VERSION = '0.0.3';
 
 
 my $extends = sub {
-  eval "package ${\scalar(caller)}; use parent '${\shift}';";
+  my $parent = shift;
+  eval "use $parent;";
+  eval "package ${\scalar(caller)}; use parent -norequire, '$parent';";
 };
 
 my $has = sub {
@@ -30,7 +32,9 @@ my $has = sub {
 
     my $set = $meta->{set} || sub {$_[1]};
 
-    my ($callpkg, $callfn) = split(/::/, +(caller(1))[3]);
+    my @call = caller(1);
+    @call = caller(0) unless(@call);
+    my ($callpkg, $callfn) = split(/::/, $call[3]);
 
     $self->__soo_get_set__($method, $set->($self, shift)) if(@_ && ( $meta->{rw} || ($callpkg eq 'Soo' && $callfn eq '__ANON__') ));
 
@@ -78,7 +82,9 @@ sub import {
 
     return unless($field);
 
-    my ($callpkg, $callfn) = split(/::/, +(caller(1))[3]);
+    my @call = caller(1);
+    @call = caller(0) unless(@call);
+    my ($callpkg, $callfn) = split(/::/, $call[3]);
 
     croak "Access denied for $callpkg\::$callfn" unless($callpkg eq 'Soo' && $callfn eq '__ANON__');
 
@@ -118,7 +124,7 @@ Soo - Simple object oriented system for Perl
  
 =head1 VERSION
  
-version 0.0.2
+version 0.0.3
 
 =head1 SYNOPSIS
  
@@ -159,7 +165,8 @@ In F<example.pl>:
  
   use Employee;
  
-  my $obj = Employee->new( name => "Gabi", id => "123", email => "GABI@FOLLOW.ME" );
+  # constructor params must be in a hash ref
+  my $obj = Employee->new({ name => "Gabi", id => "123", email => "GABI@FOLLOW.ME" });
  
   $obj->name; # Gabi
   $obj->name('Gisele');
@@ -174,6 +181,120 @@ In F<example.pl>:
   $obj->email; # gabi@follow.me
   # the email was specified in uppercase in the constructor
   # but the set function changed it to lowercase
+
+=head1 DESCRIPTION
+ 
+A tiny module that provides some sugars for object oriented programming in Perl. A list of characteristics:
+ 
+=over 4
+ 
+=item *
+ 
+compatible with bless stuff
+ 
+=item *
+ 
+can be mixed with your own methods declared with sub {}
+ 
+=item *
+ 
+can be imported with: use parent 'MyModule'
+ 
+=item *
+ 
+generates read only methods by default
+ 
+=item *
+ 
+generates read write methods if specified
+ 
+=item *
+ 
+C<new> takes a hash reference as param
+ 
+=item *
+ 
+does not inherit from a special base class
+ 
+=back
+
+=head1 USAGE
+ 
+=head2 A small example
+
+  use strict;
+  use warnings;
+
+  package Pet;
+
+  use Soo;
+
+  has eat => { default => 'eating' };
+  has fly => { default => 'flying' };
+  has 'name';
+  has run => { default => 'running' };
+  has talk => { default => 'talking' };
+  has sleep => { default => 'sleeping' };
+
+
+  package Pet::Cat;
+
+  use Soo;
+
+  extends 'Pet';
+
+  has fly => { default => 'I cannot fly' };
+  has talk => { default => 'meow' };
+
+
+  package Pet::Dog;
+
+  use Soo;
+
+  extends 'Pet';
+
+  has fly => { default => 'I cannot fly' };
+  has talk => { default => 'wow' };
+
+
+  package Pet::Parrot;
+
+  use Soo;
+
+  extends 'Pet';
+
+  has run => { default => 'I cannot run' };
+  has talk => { default => 'argh' };
+
+
+  package main;
+
+  my $cat = Pet::Cat->new({ name => 'Simba' });
+  my $dog = Pet::Dog->new({ name => 'Buddy' });
+  my $parrot = Pet::Parrot->new({ name => 'Petey' });
+
+  $cat->name;      # Simba
+  $cat->eat;       # eating
+  $cat->fly;       # I cannot fly
+  $cat->run;       # running
+  $cat->talk;      # meow
+  $cat->sleep;     # sleeping
+  
+
+  $dog->name;      # Buddy
+  $dog->eat;       # eating
+  $dog->fly;       # I cannot fly
+  $dog->run;       # running
+  $dog->talk;      # wow
+  $dog->sleep;     # sleeping
+  
+
+  $parrot->name;   # Petey
+  $parrot->eat;    # eating
+  $parrot->fly;    # flying
+  $parrot->run;    # I cannot run
+  $parrot->talk;   # argh
+  $parrot->sleep;  # sleeping
 
 =head1 SUPPORT
  
