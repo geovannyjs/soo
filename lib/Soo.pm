@@ -5,12 +5,12 @@ package Soo;
 
 use Carp 'croak';
 
-our $VERSION = '0.0.3';
+our $VERSION = '0.0.4';
 
 
 my $extends = sub {
   my $parent = shift;
-  eval "use $parent;";
+  eval "require $parent;";
   eval "package ${\scalar(caller)}; use parent -norequire, '$parent';";
 };
 
@@ -124,7 +124,7 @@ Soo - Simple object oriented system for Perl
  
 =head1 VERSION
  
-version 0.0.3
+version 0.0.4
 
 =head1 SYNOPSIS
  
